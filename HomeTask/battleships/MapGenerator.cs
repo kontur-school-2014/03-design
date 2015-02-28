@@ -7,18 +7,15 @@ namespace battleships
     public interface IMapGenerator
     {
         Map GenerateMap();
-        //void PlaceShip(Map map, int size);
     }
 
 	public class MapGenerator : IMapGenerator
 	{
 		private readonly Settings settings;
-		private readonly Random random;
 
-		public MapGenerator(Settings settings, Random random)
+		public MapGenerator(Settings settings)
 		{
 			this.settings = settings;
-			this.random = random;
 		}
 
 		public Map GenerateMap()
@@ -31,6 +28,7 @@ namespace battleships
 
 		private void PlaceShip(Map map, int size)
 		{
+		    var random = new Random(settings.RandomSeed);
 			var cells = Vector.Rect(0, 0, settings.Width, settings.Height).OrderBy(v => random.Next());
 			foreach (var loc in cells)
 			{
@@ -48,7 +46,7 @@ namespace battleships
 		public void always_succeed_on_standard_map()
 		{
 			var settings = new Settings { Width = 10, Height = 10, Ships = new[] { 1, 1, 1, 1, 2, 2, 2, 3, 3, 4 } };
-			var gen = new MapGenerator(settings, new Random());
+			var gen = new MapGenerator(settings);
 			for (var i = 0; i < 10000; i++)
 				gen.GenerateMap();
 		}

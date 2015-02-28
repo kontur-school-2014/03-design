@@ -1,35 +1,51 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using NLog;
 
 namespace battleships
 {
-	public class AiTester
-	{
-		private static readonly Logger resultsLog = LogManager.GetLogger("results");
+    public interface IAiTester
+    {
+        void TestAi();
+    }
+
+    public class AiTester : IAiTester
+    {
+		private readonly Logger resultsLog;
 		private readonly Settings settings;
         private readonly IMapGenerator mapGenerator;
         private readonly IGameVisualizer visualizer;
+        private readonly IAiFactory aiFactory;
+        private readonly IGameFactory gameFactory;
+        private readonly TextWriter textWriter;
+		private readonly TextReader textReader;
 
-		public AiTester(Settings settings, IMapGenerator mapGenerator, IGameVisualizer visualizer)
+        public AiTester(Settings settings, IMapGenerator mapGenerator, IGameVisualizer visualizer, IAiFactory aiFactory, 
+            ILoggerFactory logFactory,TextWriter textWriter, TextReader textReader,IGameFactory gameFactory)
 		{
 			this.settings = settings;
 		    this.mapGenerator = mapGenerator;
 		    this.visualizer = visualizer;
+            this.aiFactory = aiFactory;
+            resultsLog = logFactory.CreateLogger();
+            this.textWriter = textWriter;
+			this.textReader = textReader;
+            this.gameFactory = gameFactory;
 		}
 
-		public void TestSingleFile(string exe, ProcessMonitor monitor)
+		public void TestAi()
 		{
 			var badShots = 0;
 			var crashes = 0;
 			var gamesPlayed = 0;
 			var shots = new List<int>();
-			var ai = new Ai(exe, monitor);
+			var ai = aiFactory.Construct();
 			for (var gameIndex = 0; gameIndex < settings.GamesCount; gameIndex++)
 			{
                 var map = mapGenerator.GenerateMap();
-				var game = new Game(map, ai);
+                var game = gameFactory.CreateGame(map,ai);
 				RunGameToEnd(game);
 				gamesPlayed++;
 				badShots += game.BadShots;
@@ -37,13 +53,13 @@ namespace battleships
 				{
 					crashes++;
 					if (crashes > settings.CrashLimit) break;
-					ai = new Ai(exe, monitor);
+                    ai = aiFactory.Construct();
 				}
 				else
 					shots.Add(game.TurnsCount);
 				if (settings.Verbose)
 				{
-					Console.WriteLine(
+					textWriter.WriteLine(
 						"Game #{3,4}: Turns {0,4}, BadShots {1}{2}",
 						game.TurnsCount, game.BadShots, game.AiCrashed ? ", Crashed" : "", gameIndex);
 				}
@@ -61,8 +77,9 @@ namespace battleships
 				{
 					visualizer.Visualize(game);
 					if (game.AiCrashed)
-						Console.WriteLine(game.LastError.Message);
-					Console.ReadKey();
+						textWriter.WriteLine(game.LastError.Message);
+					textWriter.Write("Press <Enter> to continue");
+					textReader.ReadLine();
 				}
 			}
 		}
@@ -81,11 +98,11 @@ namespace battleships
 			var headers = FormatTableRow(new object[] { "AiName", "Mean", "Sigma", "Median", "Crashes", "Bad%", "Games", "Score" });
 			var message = FormatTableRow(new object[] { ai.Name, mean, sigma, median, crashes, badFraction, gamesPlayed, score });
 			resultsLog.Info(message);
-			Console.WriteLine();
-			Console.WriteLine("Score statistics");
-			Console.WriteLine("================");
-			Console.WriteLine(headers);
-			Console.WriteLine(message);
+			textWriter.WriteLine();
+			textWriter.WriteLine("Score statistics");
+			textWriter.WriteLine("================");
+			textWriter.WriteLine(headers);
+			textWriter.WriteLine(message);
 		}
 
 		private string FormatTableRow(object[] values)

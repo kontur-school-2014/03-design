@@ -7,8 +7,13 @@ using NLog;
 
 namespace battleships
 {
-	public class ProcessMonitor
-	{
+    public interface IProcessMonitor
+    {
+        void Register(Process process);
+    }
+
+    public class ProcessMonitor : IProcessMonitor
+    {
 		private static readonly Logger log = LogManager.GetCurrentClassLogger();
 		private readonly object locker = new object();
 		private readonly long memoryLimit;

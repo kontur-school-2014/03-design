@@ -32,6 +32,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="FakeItEasy">
+      <HintPath>..\packages\FakeItEasy.1.24.0\lib\net40\FakeItEasy.dll</HintPath>
+    </Reference>
     <Reference Include="Ninject">
       <HintPath>..\packages\Ninject.3.2.2.0\lib\net45-full\Ninject.dll</HintPath>
     </Reference>
@@ -52,9 +55,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Ai.cs" />
+    <Compile Include="Factories\AiFactory.cs" />
     <Compile Include="AiTesterContainer.cs" />
     <Compile Include="Game.cs" />
     <Compile Include="GameVisualizer.cs" />
+    <Compile Include="Factories\GameFactory.cs" />
+    <Compile Include="Factories\LoggerFactory.cs" />
     <Compile Include="Map.cs" />
     <Compile Include="MapGenerator.cs" />
     <Compile Include="Map_should.cs" />

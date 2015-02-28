@@ -9,23 +9,50 @@ namespace battleships
 {
 	public class Program
 	{
+        private readonly CommandLineArgs arguments;
+        private readonly TextWriter textWriter;
+        public Program(CommandLineArgs arguments,TextWriter textWriter)
+        {
+            this.arguments = arguments;
+            this.textWriter = textWriter;
+        }
+
 		private static void Main(string[] args)
 		{
-		    var container = new StandardKernel(new AiTesterContainer());
-			Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-			if (args.Length == 0)
-			{
-				Console.WriteLine("Usage: {0} <ai.exe>", Process.GetCurrentProcess().ProcessName);
-				return;
-			}
-			var aiPath = args[0];
-			var settings = new Settings("settings.txt");
-            var tester = new AiTester(settings, new MapGenerator(settings, new Random(settings.RandomSeed)),new GameVisualizer());
-			if (File.Exists(aiPath))
-				tester.TestSingleFile(aiPath, new ProcessMonitor(TimeSpan.FromSeconds(settings.TimeLimitSeconds * settings.GamesCount), settings.MemoryLimit));
-			else
-				Console.WriteLine("No AI exe-file " + aiPath);
-
+		    var container = new StandardKernel();
+            container.Bind<TextWriter>().ToConstant(Console.Out);
+            container.Bind<CommandLineArgs>().To<CommandLineArgs>().WithConstructorArgument(args);
+            container.Get<Program>().Run();
 		}
+
+	    private void Run()
+	    {
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+            var aiPath = arguments.AiPath;
+            if (aiPath == null)
+            {
+                textWriter.WriteLine("Usage: {0} <ai.exe>", Process.GetCurrentProcess().ProcessName);
+                return;
+            }
+	        if (!File.Exists(aiPath))
+	        {
+	            textWriter.WriteLine("No AI exe-file " + aiPath);
+	            return;
+	        }
+            var aiTesterContainer = new StandardKernel(new AiTesterContainer(aiPath));
+            aiTesterContainer.Get<IAiTester>().TestAi();
+	    }
 	}
+
+    public class CommandLineArgs
+    {
+        private readonly string[] args;
+
+        public CommandLineArgs(string[] args)
+        {
+            this.args = args;
+        }
+
+        public string AiPath { get { return args.Length == 0 ? null : args[0]; } }
+    }
 }
