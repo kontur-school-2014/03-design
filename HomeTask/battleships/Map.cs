@@ -178,12 +178,13 @@ namespace battleships
 		///<summary>Есть ли хоть одна живая клетка</summary>
 		public bool HasAliveShips()
 		{
-			for (int index = 0; index < Ships.Count; index++)
-			{
-				var s = Ships[index];
-				if (s.Alive) return true;
-			}
-			return false;
+		    return Ships.Any(s => s.Alive);
+		    //for (int index = 0; index < Ships.Count; index++)
+            //{
+            //    var s = Ships[index];
+            //    if (s.Alive) return true;
+            //}
+            //return false;
 		}
 	}
 }
