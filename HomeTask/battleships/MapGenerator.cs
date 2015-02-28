@@ -4,7 +4,13 @@ using NUnit.Framework;
 
 namespace battleships
 {
-	public class MapGenerator
+    public interface IMapGenerator
+    {
+        Map GenerateMap();
+        //void PlaceShip(Map map, int size);
+    }
+
+	public class MapGenerator : IMapGenerator
 	{
 		private readonly Settings settings;
 		private readonly Random random;
@@ -33,9 +39,9 @@ namespace battleships
 			}
 			throw new Exception("Can't put next ship on map. No free space");
 		}
-	}
+	}    
 
-	[TestFixture]
+    [TestFixture]
 	public class MapGenerator_should
 	{
 		[Test]
